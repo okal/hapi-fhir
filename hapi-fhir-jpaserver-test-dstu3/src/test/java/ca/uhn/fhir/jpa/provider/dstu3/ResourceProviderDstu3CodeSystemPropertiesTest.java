@@ -86,7 +86,7 @@ public class ResourceProviderDstu3CodeSystemPropertiesTest extends BaseResourceP
          Iterator<Parameters.ParametersParameterComponent> parameterPartIterator = parameter.getPart().iterator();
 
          parameter = parameterPartIterator.next();
-         assertEquals("code", parameter.getName());
+         assertEquals("string", parameter.getName());
          assertEquals(property.getCode(), ((CodeType)parameter.getValue()).getValue());
 
          parameter = parameterPartIterator.next();

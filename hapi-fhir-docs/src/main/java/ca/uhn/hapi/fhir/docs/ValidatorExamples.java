@@ -296,8 +296,8 @@ public class ValidatorExamples {
 
 			@Override
 			public CodeValidationResult validateCode(
-					@Nonnull ValidationSupportContext theValidationSupportContext,
-					@Nonnull ConceptValidationOptions theOptions,
+					ValidationSupportContext theValidationSupportContext,
+					ConceptValidationOptions theOptions,
 					String theCodeSystem,
 					String theCode,
 					String theDisplay,

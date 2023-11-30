@@ -78,7 +78,7 @@ public class ResourceProviderR5CodeSystemPropertiesTest extends BaseResourceProv
          Iterator<Parameters.ParametersParameterComponent> parameterPartIterator = parameter.getPart().iterator();
 
          parameter = parameterPartIterator.next();
-         assertEquals("code", parameter.getName());
+         assertEquals("string", parameter.getName());
          assertEquals(property.getCode(), ((CodeType)parameter.getValue()).getCode());
 
          parameter = parameterPartIterator.next();

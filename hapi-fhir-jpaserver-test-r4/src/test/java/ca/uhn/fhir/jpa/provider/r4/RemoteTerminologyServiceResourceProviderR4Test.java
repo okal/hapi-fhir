@@ -5,11 +5,8 @@ import ca.uhn.fhir.context.support.IValidationSupport;
 import ca.uhn.fhir.rest.annotation.IdParam;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
-import ca.uhn.fhir.rest.annotation.RequiredParam;
-import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
-import ca.uhn.fhir.rest.param.UriParam;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 import ca.uhn.fhir.test.utilities.server.RestfulServerExtension;
 import org.hl7.fhir.common.hapi.validation.support.RemoteTerminologyServiceValidationSupport;
@@ -28,9 +25,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /*
@@ -45,12 +43,11 @@ public class RemoteTerminologyServiceResourceProviderR4Test {
 	private static final String VALUE_SET_URL = "http://value.set/url";
 	private static final String SAMPLE_MESSAGE = "This is a sample message";
 	private static final FhirContext ourCtx = FhirContext.forR4Cached();
-	private MyCodeSystemProvider myCodeSystemProvider = new MyCodeSystemProvider();
-	private MyValueSetProvider myValueSetProvider = new MyValueSetProvider();
+	private static final MyCodeSystemProvider ourCodeSystemProvider = new MyCodeSystemProvider();
+	private static final MyValueSetProvider ourValueSetProvider = new MyValueSetProvider();
 
 	@RegisterExtension
-	public RestfulServerExtension myRestfulServerExtension = new RestfulServerExtension(ourCtx, myCodeSystemProvider,
-		myValueSetProvider);
+	public static final RestfulServerExtension myRestfulServerExtension = new RestfulServerExtension(ourCtx, ourCodeSystemProvider, ourValueSetProvider);
 
 	private RemoteTerminologyServiceValidationSupport mySvc;
 
@@ -68,112 +65,127 @@ public class RemoteTerminologyServiceResourceProviderR4Test {
 	}
 
 	@Test
-	public void testValidateCodeInCodeSystem_BlankCode_ReturnsNull() {
+	public void testValidateCode_forCodeSystemWithBlankCode_ReturnsNull() {
 		IValidationSupport.CodeValidationResult outcome = mySvc
 			.validateCode(null, null, CODE_SYSTEM, null, DISPLAY, null);
 		assertNull(outcome);
 	}
 
 	@Test
-	public void testValidateCodeInCodeSystem_ProvidingMinimalInputs_ReturnsSuccess() {
+	public void testValidateCode_forCodeSystemWithMinimalInputs_ReturnsSuccess() {
 		createNextCodeSystemReturnParameters(true, null, null);
 
 		IValidationSupport.CodeValidationResult outcome = mySvc
 			.validateCode(null, null, CODE_SYSTEM, CODE, null, null);
+		assertNotNull(outcome);
 		assertEquals(CODE, outcome.getCode());
-		assertEquals(null, outcome.getSeverity());
-		assertEquals(null, outcome.getMessage());
+      assertNull(outcome.getSeverity());
+      assertNull(outcome.getMessage());
 
-		assertEquals(CODE, myCodeSystemProvider.myLastCode.getCode());
-		assertEquals(CODE_SYSTEM, myCodeSystemProvider.myLastUrl.getValueAsString());
+		assertEquals(CODE, ourCodeSystemProvider.myLastCode.getCode());
+		assertEquals(CODE_SYSTEM, ourCodeSystemProvider.myLastUrl.getValueAsString());
 	}
 
 	@Test
-	public void testValidateCodeInCodeSystem_WithMessageValue_ReturnsMessage() {
+	public void testValidateCode_forCodeSystemWithMessageValue_ReturnsMessage() {
 		createNextCodeSystemReturnParameters(true, DISPLAY, SAMPLE_MESSAGE);
 
 		IValidationSupport.CodeValidationResult outcome = mySvc
 			.validateCode(null, null, CODE_SYSTEM, CODE, DISPLAY, null);
-		assertEquals(CODE, outcome.getCode());
+		assertNotNull(outcome);
 		assertEquals(DISPLAY, outcome.getDisplay());
-		assertEquals(null, outcome.getSeverity());
-		assertEquals(null, outcome.getMessage());
+      assertNull(outcome.getSeverity());
+      assertNull(outcome.getMessage());
 
-		assertEquals(CODE, myCodeSystemProvider.myLastCode.getCode());
-		assertEquals(DISPLAY, myCodeSystemProvider.myLastDisplay.getValue());
-		assertEquals(CODE_SYSTEM, myCodeSystemProvider.myLastUrl.getValueAsString());
-		assertEquals(SAMPLE_MESSAGE, myCodeSystemProvider.myNextReturnParams.getParameterValue("message").toString());
+		assertEquals(CODE, ourCodeSystemProvider.myLastCode.getCode());
+		assertEquals(DISPLAY, ourCodeSystemProvider.myLastDisplay.getValue());
+		assertEquals(CODE_SYSTEM, ourCodeSystemProvider.myLastUrl.getValueAsString());
+		assertEquals(SAMPLE_MESSAGE, ourCodeSystemProvider.myNextReturnParams.getParameterValue("message").toString());
 	}
 
 	@Test
-	public void testValidateCodeInCodeSystem_AssumeFailure_ReturnsFailureCodeAndFailureMessage() {
+	public void testValidateCode_forCodeSystemWithFailure_ReturnsFailureCodeAndFailureMessage() {
 		createNextCodeSystemReturnParameters(false, null, SAMPLE_MESSAGE);
 
 		IValidationSupport.CodeValidationResult outcome = mySvc
 			.validateCode(null, null, CODE_SYSTEM, CODE, null, null);
+		assertNotNull(outcome);
 		assertEquals(IValidationSupport.IssueSeverity.ERROR, outcome.getSeverity());
 		assertEquals(SAMPLE_MESSAGE, outcome.getMessage());
 
-		assertEquals(false, ((BooleanType)myCodeSystemProvider.myNextReturnParams.getParameterValue("result")).booleanValue());
+      assertFalse(((BooleanType) ourCodeSystemProvider.myNextReturnParams.getParameterValue("result")).booleanValue());
 	}
 
 	@Test
-	public void testValidateCodeInValueSet_ProvidingMinimalInputs_ReturnsSuccess() {
+	public void testValidateCode_forValueSetWithMinimalInputs_ReturnsSuccess() {
 		createNextValueSetReturnParameters(true, null, null);
 
 		IValidationSupport.CodeValidationResult outcome = mySvc
-			.validateCode(null, null, CODE_SYSTEM, CODE, null, VALUE_SET_URL);
+				.validateCode(null, null, CODE_SYSTEM, CODE, null, VALUE_SET_URL);
+		assertNotNull(outcome);
 		assertEquals(CODE, outcome.getCode());
-		assertEquals(null, outcome.getSeverity());
-		assertEquals(null, outcome.getMessage());
+		assertNull(outcome.getSeverity());
+		assertNull(outcome.getMessage());
 
-		assertEquals(CODE, myValueSetProvider.myLastCode.getCode());
-		assertEquals(VALUE_SET_URL, myValueSetProvider.myLastUrl.getValueAsString());
+		assertEquals(CODE, ourValueSetProvider.myLastCode.getCode());
+		assertEquals(VALUE_SET_URL, ourValueSetProvider.myLastUrl.getValueAsString());
 	}
 
 	@Test
-	public void testValidateCodeInValueSet_WithMessageValue_ReturnsMessage() {
+	public void testValidateCode_forValueSetWithMessageValue_ReturnsMessage() {
 		createNextValueSetReturnParameters(true, DISPLAY, SAMPLE_MESSAGE);
 
 		IValidationSupport.CodeValidationResult outcome = mySvc
 			.validateCode(null, null, CODE_SYSTEM, CODE, DISPLAY, VALUE_SET_URL);
+		assertNotNull(outcome);
 		assertEquals(CODE, outcome.getCode());
 		assertEquals(DISPLAY, outcome.getDisplay());
-		assertEquals(null, outcome.getSeverity());
-		assertEquals(null, outcome.getMessage());
+      assertNull(outcome.getSeverity());
+      assertNull(outcome.getMessage());
 
-		assertEquals(CODE, myValueSetProvider.myLastCode.getCode());
-		assertEquals(DISPLAY, myValueSetProvider.myLastDisplay.getValue());
-		assertEquals(VALUE_SET_URL, myValueSetProvider.myLastUrl.getValueAsString());
-		assertEquals(SAMPLE_MESSAGE, myValueSetProvider.myNextReturnParams.getParameterValue("message").toString());
+		assertEquals(CODE, ourValueSetProvider.myLastCode.getCode());
+		assertEquals(DISPLAY, ourValueSetProvider.myLastDisplay.getValue());
+		assertEquals(VALUE_SET_URL, ourValueSetProvider.myLastUrl.getValueAsString());
+		assertEquals(SAMPLE_MESSAGE, ourValueSetProvider.myNextReturnParams.getParameterValue("message").toString());
 	}
 
+	@Test
+	public void testValidateCode_forValueSetWithFailure_ReturnsFailureCodeAndFailureMessage() {
+		createNextValueSetReturnParameters(false, null, SAMPLE_MESSAGE);
+
+		IValidationSupport.CodeValidationResult outcome = mySvc
+				.validateCode(null, null, CODE_SYSTEM, CODE, null, VALUE_SET_URL);
+		assertNotNull(outcome);
+		assertEquals(IValidationSupport.IssueSeverity.ERROR, outcome.getSeverity());
+		assertEquals(SAMPLE_MESSAGE, outcome.getMessage());
+
+		assertFalse(((BooleanType) ourValueSetProvider.myNextReturnParams.getParameterValue("result")).booleanValue());
+	}
+
+
 	private void createNextCodeSystemReturnParameters(boolean theResult, String theDisplay, String theMessage) {
-		myCodeSystemProvider.myNextReturnParams = new Parameters();
-		myCodeSystemProvider.myNextReturnParams.addParameter("result", theResult);
-		myCodeSystemProvider.myNextReturnParams.addParameter("display", theDisplay);
+		ourCodeSystemProvider.myNextReturnParams = new Parameters();
+		ourCodeSystemProvider.myNextReturnParams.addParameter("result", theResult);
+		ourCodeSystemProvider.myNextReturnParams.addParameter("display", theDisplay);
 		if (theMessage != null) {
-			myCodeSystemProvider.myNextReturnParams.addParameter("message", theMessage);
+			ourCodeSystemProvider.myNextReturnParams.addParameter("message", theMessage);
 		}
 	}
 
 	private void createNextValueSetReturnParameters(boolean theResult, String theDisplay, String theMessage) {
-		myValueSetProvider.myNextReturnParams = new Parameters();
-		myValueSetProvider.myNextReturnParams.addParameter("result", theResult);
-		myValueSetProvider.myNextReturnParams.addParameter("display", theDisplay);
+		ourValueSetProvider.myNextReturnParams = new Parameters();
+		ourValueSetProvider.myNextReturnParams.addParameter("result", theResult);
+		ourValueSetProvider.myNextReturnParams.addParameter("display", theDisplay);
 		if (theMessage != null) {
-			myValueSetProvider.myNextReturnParams.addParameter("message", theMessage);
+			ourValueSetProvider.myNextReturnParams.addParameter("message", theMessage);
 		}
 	}
 
 	private static class MyCodeSystemProvider implements IResourceProvider {
-		private UriParam myLastUrlParam;
-		private List<CodeSystem> myNextReturnCodeSystems;
-		private int myInvocationCount;
+		private Parameters myNextReturnParams;
 		private UriType myLastUrl;
 		private CodeType myLastCode;
 		private StringType myLastDisplay;
-		private Parameters myNextReturnParams;
 
 		@Operation(name = "validate-code", idempotent = true, returnParameters = {
 			@OperationParam(name = "result", type = BooleanType.class, min = 1),
@@ -187,19 +199,11 @@ public class RemoteTerminologyServiceResourceProviderR4Test {
 			@OperationParam(name = "code", min = 0, max = 1) CodeType theCode,
 			@OperationParam(name = "display", min = 0, max = 1) StringType theDisplay
 		) {
-			myInvocationCount++;
 			myLastUrl = theCodeSystemUrl;
 			myLastCode = theCode;
 			myLastDisplay = theDisplay;
 			return myNextReturnParams;
 
-		}
-
-		@Search
-		public List<CodeSystem> find(@RequiredParam(name = "url") UriParam theUrlParam) {
-			myLastUrlParam = theUrlParam;
-			assert myNextReturnCodeSystems != null;
-			return myNextReturnCodeSystems;
 		}
 
 		@Override
@@ -211,14 +215,9 @@ public class RemoteTerminologyServiceResourceProviderR4Test {
 
 	private static class MyValueSetProvider implements IResourceProvider {
 		private Parameters myNextReturnParams;
-		private List<ValueSet> myNextReturnValueSets;
 		private UriType myLastUrl;
 		private CodeType myLastCode;
-		private int myInvocationCount;
-		private UriType myLastSystem;
 		private StringType myLastDisplay;
-		private ValueSet myLastValueSet;
-		private UriParam myLastUrlParam;
 
 		@Operation(name = "validate-code", idempotent = true, returnParameters = {
 			@OperationParam(name = "result", type = BooleanType.class, min = 1),
@@ -234,20 +233,10 @@ public class RemoteTerminologyServiceResourceProviderR4Test {
 			@OperationParam(name = "display", min = 0, max = 1) StringType theDisplay,
 			@OperationParam(name = "valueSet") ValueSet theValueSet
 		) {
-			myInvocationCount++;
 			myLastUrl = theValueSetUrl;
 			myLastCode = theCode;
-			myLastSystem = theSystem;
 			myLastDisplay = theDisplay;
-			myLastValueSet = theValueSet;
 			return myNextReturnParams;
-		}
-
-		@Search
-		public List<ValueSet> find(@RequiredParam(name = "url") UriParam theUrlParam) {
-			myLastUrlParam = theUrlParam;
-			assert myNextReturnValueSets != null;
-			return myNextReturnValueSets;
 		}
 
 		@Override
