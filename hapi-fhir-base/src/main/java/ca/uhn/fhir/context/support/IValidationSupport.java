@@ -891,7 +891,7 @@ public interface IValidationSupport {
 					IBase property = ParametersUtil.addParameterToParameters(theContext, retVal, "property");
 					if (next instanceof StringConceptProperty) {
 						StringConceptProperty prop = (StringConceptProperty) next;
-						ParametersUtil.addPartCode(theContext, property, "string", next.getPropertyName());
+						ParametersUtil.addPartString(theContext, property, "string", next.getPropertyName());
 						ParametersUtil.addPartString(theContext, property, "value", prop.getValue());
 					} else if (next instanceof CodingConceptProperty) {
 						CodingConceptProperty prop = (CodingConceptProperty) next;
